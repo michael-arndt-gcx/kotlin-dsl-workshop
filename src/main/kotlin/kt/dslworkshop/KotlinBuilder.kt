@@ -10,13 +10,11 @@ import kt.dslworkshop.builder.GrantBuilder
 import kt.dslworkshop.builder.PrivilegeBuilder
 import kt.dslworkshop.domain.Floor
 import kt.dslworkshop.domain.User
+import kotlin.reflect.KClass
 
 fun kotlinBuilderStyle(): Privilege {
-    return privilege {
-        // TODO vergessen = exception -> zu Parameter
-        subject = User::class
-
-        val grant = grant {
+    return privilege(User::class) {
+        grant {
             permission = "JANITOR"
             target = Floor::class
             condition = Conjunction(
@@ -24,20 +22,21 @@ fun kotlinBuilderStyle(): Privilege {
                 Equals(User::isAdmin, true)
             )
         }
-
-        // TODO addGrant soll in grant passieren
-        addGrant(grant)
+        // TODO sollte nicht mehr verfügbar sein
+        subject = User::class
     }
 }
 
-fun grant(block: GrantBuilder.() -> Unit): Grant {
+fun PrivilegeBuilder.grant(block: GrantBuilder.() -> Unit) {
     val grantBuilder = GrantBuilder()
     block(grantBuilder)
-    return grantBuilder.build()
+    val grant = grantBuilder.build()
+    addGrant(grant)
 }
 
-fun privilege(block: PrivilegeBuilder.() -> Unit): Privilege {
+fun privilege(subject: KClass<User>, block: PrivilegeBuilder.() -> Unit): Privilege {
     val privilegeBuilder = PrivilegeBuilder()
+    privilegeBuilder.subject = subject
     block.invoke(privilegeBuilder)
     return privilegeBuilder.build()
 }
