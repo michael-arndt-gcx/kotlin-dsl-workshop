@@ -16,6 +16,12 @@ import kotlin.reflect.KClass
 fun kotlinBuilderStyle(): Privilege<*> {
     return forSubject<User> {
         grant permission "JANITOR" whenAccessing Floor::class where {
+            // TODO: DSL erstellen; Ziel: möglichst nah an
+            //  User::id == Floor::ownerId && User::isAdmin == true
+            //  wir gehen dafür folgende Schritte
+            //  1. (User::id == Floor::ownerId) and (User::isAdmin == true)
+            //  ignoriere vorerst Typ-Sicherheit
+            //  aber beachte die Sichtbarkeit
             Conjunction(
                 Equals(User::id, Floor::ownerId),
                 Equals(User::isAdmin, true)

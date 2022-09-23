@@ -1,11 +1,13 @@
 package kt.dslworkshop.jpa
 
 import kt.dslworkshop.authorization.condition.Condition
+import kt.dslworkshop.authorization.condition.Conjunction
 import kt.dslworkshop.authorization.condition.Equals
 import org.springframework.stereotype.Service
 import javax.persistence.EntityManager
 import javax.persistence.criteria.CriteriaBuilder
 import javax.persistence.criteria.CriteriaQuery
+import javax.persistence.criteria.Expression
 import javax.persistence.criteria.Predicate
 import javax.persistence.metamodel.SingularAttribute
 import kotlin.jvm.internal.CallableReference
@@ -19,23 +21,33 @@ class ConditionToCriteriaTransformer(val entityManager: EntityManager) {
         cb: CriteriaBuilder,
         criteriaQuery: CriteriaQuery<*>
     ): Predicate {
-        // Wir treffen hier sehr viele Annahmen, um initial zu zeigen, dass es grundsätzlich möglich ist.
+        return condition.toPredicate(cb, criteriaQuery)
+    }
 
-        // nur Equals
-        val equals = condition as Equals
+    private fun Condition.toPredicate(cb: CriteriaBuilder, criteriaQuery: CriteriaQuery<*>): Predicate {
+        return when(this) {
+            is Equals -> cb.equal(this.left.toPredicate(cb, criteriaQuery), this.right.toPredicate(cb, criteriaQuery))
+            is Conjunction -> cb.and(this.left.toPredicate(cb, criteriaQuery), this.right.toPredicate(cb, criteriaQuery))
+        }
+    }
 
-        // links muss eine Property einer Entity stehen
-        val left = equals.left as KProperty<*>
 
-        val entityClass = ((left as CallableReference).owner as KClass<*>).java
-        val entityModel = entityManager.metamodel.entity(entityClass)
+    private fun Any.toPredicate(cb: CriteriaBuilder, criteriaQuery: CriteriaQuery<*>): Expression<*> {
+        return when(this) {
+            is Int, is String -> cb.literal(this)
+            is KProperty<*> -> {
+                val entityClass = ((this as CallableReference).owner as KClass<*>).java
+                val entityModel = entityManager.metamodel.entity(entityClass)
+                val root = criteriaQuery.roots.single { it.model == entityModel }
 
-        @Suppress("UNCHECKED_CAST")
-        val attribute = entityModel.getAttribute(left.name) as SingularAttribute<Any, *>
+                @Suppress("UNCHECKED_CAST")
+                val attribute = entityModel.getAttribute(this.name) as SingularAttribute<Any, *>
 
-        // wir erlauben keine self-joins, jede Tabelle darf nur 1 mal vorkommen.
-        val root = criteriaQuery.roots.single { it.model == entityModel }
-
-        return cb.equal(root.get(attribute), cb.literal(equals.right))
+                root.get(attribute)
+            }
+            else -> error("Unsupported type ${this::class}")
+        }
     }
 }
+
+

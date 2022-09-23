@@ -1,3 +1,19 @@
+# JPA Criteria API 2
+
+Wir können nun alle Kombinationen aus Gleichheits-Vergleichen mit unterschiedlichen Typen in ein `Predicate` überführen.
+
+Damit dies funktionieren kann, ohne dass unsere Sprachelemente die JPA kennen, muss ein sogenannter [Double dispatch](https://en.wikipedia.org/wiki/Double_dispatch) durchgeführt werden. In den meisten Sprachen bietet sich dafür das [Visitor Pattern](https://en.wikipedia.org/wiki/Visitor_pattern) an.
+
+In Kotlin haben wir durch Extension-Functions und den `is`-Operator allerdings eine weniger umständliche Möglichkeit. In kombination mit `sealed` interfaces/classes konnten wir die stärken von Kotlin hier voll ausspielen.
+
+```kotlin
+fun Condition.toPredicate(cb: CriteriaBuilder, criteriaQuery: CriteriaQuery<*>): Predicate {
+    return when(this) {
+        is Equals -> cb.equal(this.left.toPredicate(cb, criteriaQuery), this.right.toPredicate(cb, criteriaQuery))
+        is Conjunction -> cb.and(this.left.toPredicate(cb, criteriaQuery), this.right.toPredicate(cb, criteriaQuery))
+    }
+}
+```
 # JPA Criteria API 1
 
 Wir haben unsere `Condition` in ein `Predicate` aus der JPA Criteria API umgebaut.
