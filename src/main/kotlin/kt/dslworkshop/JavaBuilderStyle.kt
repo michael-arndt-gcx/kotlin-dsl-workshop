@@ -8,8 +8,8 @@ import kt.dslworkshop.builder.PrivilegeBuilder
 import kt.dslworkshop.domain.*
 
 @Suppress("UnnecessaryVariable")
-fun javaBuilderStyle(): Privilege {
-    val privilegeBuilder = PrivilegeBuilder()
+fun javaBuilderStyle(): Privilege<*> {
+    val privilegeBuilder = PrivilegeBuilder<User>()
 
     val grantBuilder = GrantBuilder()
     grantBuilder.permission = "JANITOR"

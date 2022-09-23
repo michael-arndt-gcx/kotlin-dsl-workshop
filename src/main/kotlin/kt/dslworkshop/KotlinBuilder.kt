@@ -13,9 +13,9 @@ import kt.dslworkshop.domain.Floor
 import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
 
-fun kotlinBuilderStyle(): Privilege {
-    // TODO mache Subject generisch
-    return forSubject(User::class) {
+fun kotlinBuilderStyle(): Privilege<*> {
+    // TODO mache Target generisch
+    return forSubject<User> {
         // TODO mache die Condition optional
         grant permission "JANITOR" whenAccessing Floor::class where {
             Conjunction(
@@ -71,9 +71,9 @@ class PrivilegeBuilderDsl {
 
 object GrantBuilderDsl
 
-fun forSubject(subject: KClass<User>, block: PrivilegeBuilderDsl.() -> Unit): Privilege {
-    val privilegeBuilder = PrivilegeBuilder().apply {
-        this.subject = subject
+inline fun <reified T : Any> forSubject(block: PrivilegeBuilderDsl.() -> Unit): Privilege<T> {
+    val privilegeBuilder = PrivilegeBuilder<T>().apply {
+        this.subject = T::class
     }
     val facade = PrivilegeBuilderDsl()
     block.invoke(facade)
