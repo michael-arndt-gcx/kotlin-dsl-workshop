@@ -1,5 +1,6 @@
 package kt.dslworkshop
 
+import kt.dslworkshop.jpa.ConditionToCriteriaTransformer
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
@@ -19,12 +20,14 @@ import javax.persistence.ManyToOne
 
 class EmptyContext
 
+@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 @SpringBootTest(classes = [EmptyContext::class], webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration
 @AutoConfigureDataJpa
 @EntityScan
 @AutoConfigureTestDatabase
 @EnableJpaRepositories(considerNestedRepositories = true, basePackageClasses = [DslDemoApplicationTests::class])
+@Import(ConditionToCriteriaTransformer::class)
 class DslDemoApplicationTests {
     @Entity class Group(@Id var id: UUID = UUID.randomUUID())
     @Entity class User(@Id var id: UUID = UUID.randomUUID())

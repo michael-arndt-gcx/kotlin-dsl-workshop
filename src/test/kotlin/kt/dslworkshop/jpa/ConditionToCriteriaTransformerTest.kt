@@ -111,7 +111,7 @@ class ConditionToCriteriaTransformerTest {
             val criteriaQuery = cb.createQuery(Device::class.java)
             val fromDevice = criteriaQuery.from(Device::class.java)
 
-            val predicate: Predicate = cb.isTrue(cb.literal(true))
+            val predicate: Predicate = conditionToCriteriaTransformer.transformCondition(condition, cb, criteriaQuery)
 
             criteriaQuery.where(
                 cb.equal(
