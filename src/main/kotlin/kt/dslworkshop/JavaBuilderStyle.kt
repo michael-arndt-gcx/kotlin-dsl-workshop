@@ -11,7 +11,7 @@ import kt.dslworkshop.domain.*
 fun javaBuilderStyle(): Privilege<*> {
     val privilegeBuilder = PrivilegeBuilder<User>()
 
-    val grantBuilder = GrantBuilder()
+    val grantBuilder = GrantBuilder<Floor>()
     grantBuilder.permission = "JANITOR"
     grantBuilder.target = Floor::class
     grantBuilder.condition = Conjunction(
@@ -23,7 +23,7 @@ fun javaBuilderStyle(): Privilege<*> {
     val grant = grantBuilder.build()
     privilegeBuilder.addGrant(grant)
 
-    val globalGrantBuilder = GrantBuilder()
+    val globalGrantBuilder = GrantBuilder<Floor>()
     globalGrantBuilder.permission = "JANITOR"
     globalGrantBuilder.target = Floor::class
     globalGrantBuilder.condition = null
