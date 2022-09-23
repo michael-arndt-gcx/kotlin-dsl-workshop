@@ -15,8 +15,8 @@ import kotlin.reflect.KClass
 
 fun kotlinBuilderStyle(): Privilege {
     return forSubject(User::class) {
-        // TODO entferne alle Klammern
-        (grant permission ("JANITOR" whenAccessing Floor::class)) where {
+        // TODO verhindere `grant permission "JANITOR" whenAccessing Floor::class whenAccessing Floor::class`
+        grant permission "JANITOR" whenAccessing Floor::class where {
             Conjunction(
                 Equals(User::id, Floor::ownerId),
                 Equals(User::isAdmin, true)
@@ -26,42 +26,25 @@ fun kotlinBuilderStyle(): Privilege {
 }
 
 object GrantKeyword
+
 class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
     val grant = GrantKeyword
 
-    infix fun GrantKeyword.permission(pair: Pair<String, KClass<Floor>>) : GrantBuilder = GrantBuilder().apply {
-        this.permission = pair.first
-        this.target = pair.second
+    infix fun GrantKeyword.permission(permission: String): GrantBuilder = GrantBuilder().apply {
+        this.permission = permission
+    }
+
+    infix fun GrantBuilder.whenAccessing(target: KClass<Floor>): GrantBuilder {
+        this.target = target
+        return this
     }
 
     infix fun GrantBuilder.where(block: GrantBuilderDsl.() -> Conjunction) {
         this.condition = block.invoke(GrantBuilderDsl)
         addGrant(this.build())
     }
-
-    //.also { privilegeBuilder.addGrant(it) }
-
+    
     private fun addGrant(grant: Grant) = privilegeBuilder.addGrant(grant)
-    fun grant(pair: Pair<String, KClass<Floor>>, block: GrantBuilderDsl.() -> Condition) {
-        val (permission, target) = pair
-        return grant(permission, target, block)
-    }
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun grant(permission: String, target: KClass<Floor>? = null, block: GrantBuilderDsl.() -> Condition) {
-        val condition = block(GrantBuilderDsl)
-
-        val grantBuilder = GrantBuilder().apply {
-            this.permission = permission
-            this.target = target
-            this.condition = condition
-        }
-
-        val grant = grantBuilder.build()
-        addGrant(grant)
-    }
-
-    infix fun String.whenAccessing(target: KClass<Floor>) = Pair(this, target)
 }
 
 object GrantBuilderDsl

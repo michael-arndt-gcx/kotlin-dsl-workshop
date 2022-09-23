@@ -1,3 +1,24 @@
+# Einfache Sprache mit Infix-Funktionen 2
+
+Die Operator-Reihenfolge lässt sich in Kotlin nicht verändern. Wir umgehen dies, indem wir für alle Infix-Funktionen denselben Typ zurückgeben.
+
+Dies ist in der aktuellen Implementierung ohnehin notwendig*, da wir im ersten Schritt (der `permission`-infix-Funktion) das aktuell im Aufbau befindliche `Grant` bereits dem `PrivilegeBuilder` hinzufügen.
+
+Allerdings ist es nun möglich z.B. `whenAccessing` doppelt anzugeben:
+
+`grant permission "JANITOR" whenAccessing Floor::class whenAccessing Floor::class`
+
+```kotlin
+forSubject(User::class) {
+    grant permission "JANITOR" whenAccessing Floor::class where {
+        Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+}
+```
+
 # Einfache Sprache mit Infix-Funktionen
 
 Wir haben begonnen eine einfache Sprache mittels Infix-Funktionen zu bauen. Infix-Funktionen erlauben das Auslassen von Symbolen wie `.` und `()` und sind damit näher an natürlicher Sprache.
