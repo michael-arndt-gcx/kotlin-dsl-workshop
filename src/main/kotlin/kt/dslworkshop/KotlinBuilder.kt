@@ -15,6 +15,7 @@ import kotlin.reflect.KClass
 fun kotlinBuilderStyle(): Privilege {
     return privilege(User::class) {
         grant {
+            // TODO permission und target als Parameter für grant und properties hier nicht sichtbar
             permission = "JANITOR"
             target = Floor::class
             condition = Conjunction(
@@ -22,21 +23,28 @@ fun kotlinBuilderStyle(): Privilege {
                 Equals(User::isAdmin, true)
             )
         }
-        // TODO sollte nicht mehr verfügbar sein
-        subject = User::class
+        // nicht mehr sichtbar
+        //subject = User::class
+        //addGrant(grant)
     }
 }
 
-fun PrivilegeBuilder.grant(block: GrantBuilder.() -> Unit) {
-    val grantBuilder = GrantBuilder()
-    block(grantBuilder)
-    val grant = grantBuilder.build()
-    addGrant(grant)
+class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
+    private fun addGrant(grant: Grant) = privilegeBuilder.addGrant(grant)
+    fun grant(block: GrantBuilder.() -> Unit) {
+        // Member statt Extension: privilegeBuilder kann private sein
+        val grantBuilder = GrantBuilder()
+        block(grantBuilder)
+        val grant = grantBuilder.build()
+        addGrant(grant)
+    }
 }
 
-fun privilege(subject: KClass<User>, block: PrivilegeBuilder.() -> Unit): Privilege {
-    val privilegeBuilder = PrivilegeBuilder()
-    privilegeBuilder.subject = subject
-    block.invoke(privilegeBuilder)
+fun privilege(subject: KClass<User>, block: PrivilegeBuilderDslFacade.() -> Unit): Privilege {
+    val privilegeBuilder = PrivilegeBuilder().apply {
+        this.subject = subject
+    }
+    val facade = PrivilegeBuilderDslFacade(privilegeBuilder)
+    block.invoke(facade)
     return privilegeBuilder.build()
 }

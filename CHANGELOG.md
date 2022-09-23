@@ -1,3 +1,33 @@
+# Type-safe builder 3
+
+Damit die `subject`-Property und die `addGrant` Funktion nicht länger sichtbar sind, haben wir eine `Facade` eingeführt.
+
+Der Receiver von `privilege` ist jetzt eine `PrivilegeBuilderDslFacade`. Diese kapselt den ursprünglichen Builder und delegiert alle sichtbaren Properties an diesen. Unerwünschte Properties sind so nicht länger sichtbar.
+
+```kotlin
+fun privilege(subject: KClass<User>, block: PrivilegeBuilderDslFacade.() -> Unit)
+
+class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
+    private fun addGrant(grant: Grant) = privilegeBuilder.addGrant(grant)
+}
+```
+
+```kotlin
+privilege(User::class) {
+    grant {
+        permission = "JANITOR"
+        target = Floor::class
+        condition = Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+    // nicht mehr sichtbar
+    //subject = User::class
+    //addGrant(grant)
+}
+```
+
 # Type-safe builder 2
 
 Wir haben das `Subject` als Parameter ermöglicht, zusätzlich kann `grant {…}` nur noch innerhalb von `privilege {…}` aufgerufen werden. Dazu haben wir aus `grant` eine [Extension Function](https://kotlinlang.org/docs/extensions.html#extension-functions) von `PrivilegeBuilder` gemacht.
