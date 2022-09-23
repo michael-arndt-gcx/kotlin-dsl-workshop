@@ -7,6 +7,7 @@ import assertk.assertions.hasSize
 import assertk.assertions.isSuccess
 import kt.dslworkshop.EmptyContext
 import kt.dslworkshop.authorization.condition.Condition
+import kt.dslworkshop.authorization.condition.Conjunction
 import kt.dslworkshop.authorization.condition.Equals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,6 +63,7 @@ class ConditionToCriteriaTransformerTest {
         var owner: User,
 
         var securityLevel: Int,
+        var deviceType: String,
     ) {
         override fun equals(other: Any?): Boolean = (other as? Device)?.id == this.id
         override fun hashCode(): Int = id.hashCode()
@@ -144,20 +146,20 @@ class ConditionToCriteriaTransformerTest {
         val userA = userRepository.save(User(name = "a"))
         val userB = userRepository.save(User(name = "b"))
 
-        val device1 = deviceRepository.save(Device(name = "device1", owner = userA, securityLevel = 1))
-        val device2 = deviceRepository.save(Device(name = "device2", owner = userA, securityLevel = 1))
-        val device3 = deviceRepository.save(Device(name = "device3", owner = userA, securityLevel = 2))
-        val device4 = deviceRepository.save(Device(name = "device4", owner = userB, securityLevel = 1))
+        val device1 = deviceRepository.save(Device(name = "device1", owner = userA, securityLevel = 1, deviceType = "conventional"))
+        val device2 = deviceRepository.save(Device(name = "device2", owner = userA, securityLevel = 1, deviceType = "atomar"))
+        val device3 = deviceRepository.save(Device(name = "device3", owner = userA, securityLevel = 2, deviceType = "conventional"))
+        val device4 = deviceRepository.save(Device(name = "device4", owner = userB, securityLevel = 1, deviceType = "conventional"))
 
-        val condition = Equals(Device::securityLevel, 1)
+        val condition = Conjunction(Equals(1, Device::securityLevel), Equals(Device::deviceType, "conventional"))
 
         assertThat {
             userRepository.findDevices(userA, condition)
         }
             .isSuccess()
             .all {
-                hasSize(2)
-                containsExactly(device1, device2)
+                hasSize(1)
+                containsExactly(device1)
             }
     }
 }
