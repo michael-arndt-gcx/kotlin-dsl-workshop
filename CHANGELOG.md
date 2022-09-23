@@ -1,3 +1,7 @@
+# Type-safe builder 4
+
+Wir haben auch für den `GrantBuilder` eine Facade eingeführt.
+
 # Type-safe builder 3
 
 Damit die `subject`-Property und die `addGrant` Funktion nicht länger sichtbar sind, haben wir eine `Facade` eingeführt.
