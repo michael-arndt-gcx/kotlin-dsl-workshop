@@ -14,15 +14,16 @@ import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
 
 fun kotlinBuilderStyle(): Privilege {
+    // TODO mache Subject generisch
     return forSubject(User::class) {
         // TODO mache die Condition optional
-        grant permission "JANITOR" whenAccessing Floor::class
         grant permission "JANITOR" whenAccessing Floor::class where {
             Conjunction(
                 Equals(User::id, Floor::ownerId),
                 Equals(User::isAdmin, true)
             )
         }
+        grant permission "JANITOR" whenAccessing Floor::class
     }
 }
 
@@ -49,13 +50,14 @@ class GrantBuilderFacade(val grantBuilder: GrantBuilder) : GlobalGrantNode,
 }
 
 
-class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
+class PrivilegeBuilderDsl {
     val grant = GrantKeyword
+    val grantBuilderFacades: MutableList<GrantBuilderFacade> = mutableListOf()
 
     infix fun GrantKeyword.permission(permission: String): GlobalGrantNode =
         GrantBuilderFacade(GrantBuilder().apply {
             this.permission = permission
-        })
+        }).also(grantBuilderFacades::add)
 
     infix fun GlobalGrantNode.whenAccessing(target: KClass<Floor>): GrantNodeWithTarget {
         (this as GrantBuilderFacade).target = target
@@ -64,19 +66,17 @@ class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) 
 
     infix fun GrantNodeWithTarget.where(block: GrantBuilderDsl.() -> Conjunction) {
         (this as GrantBuilderFacade).condition = block.invoke(GrantBuilderDsl)
-        addGrant(this.build())
     }
-
-    private fun addGrant(grant: Grant) = privilegeBuilder.addGrant(grant)
 }
 
 object GrantBuilderDsl
 
-fun forSubject(subject: KClass<User>, block: PrivilegeBuilderDslFacade.() -> Unit): Privilege {
+fun forSubject(subject: KClass<User>, block: PrivilegeBuilderDsl.() -> Unit): Privilege {
     val privilegeBuilder = PrivilegeBuilder().apply {
         this.subject = subject
     }
-    val facade = PrivilegeBuilderDslFacade(privilegeBuilder)
+    val facade = PrivilegeBuilderDsl()
     block.invoke(facade)
+    facade.grantBuilderFacades.map { it.build() }.forEach(privilegeBuilder::addGrant)
     return privilegeBuilder.build()
 }

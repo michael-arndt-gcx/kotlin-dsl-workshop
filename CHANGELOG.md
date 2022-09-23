@@ -1,3 +1,21 @@
+# Einfache Sprache mit Infix-Funktionen 4
+
+Wir lösten uns von der `PrivilegeBuilderDslFacade` und haben an dessen Stelle `PrivilegeBuilderDsl` eingeführt. Wir delegieren nicht mehr direkt an `PrivilegeBuilder` sondern sammeln alle `GrantBuilderFacade` und konvertieren diese erst beim Abschluss der `forSubject`-Funktion.
+
+Die Bedingungen sind nun optional, und können nur in korrekter Reihenfolge angegeben werden.
+
+```kotlin
+forSubject(User::class) {
+    grant permission "JANITOR" whenAccessing Floor::class
+    grant permission "JANITOR" whenAccessing Floor::class where {
+        Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+}
+```
+
 # Einfache Sprache mit Infix-Funktionen 3
 
 Um das beliebige aneinanderreihen von `whenAccessing`/`where` Klauseln zu unterbinden, haben wir erneut eine Facade für GrantBuilder eingeführt.
