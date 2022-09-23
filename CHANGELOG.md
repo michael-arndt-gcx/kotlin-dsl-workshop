@@ -1,5 +1,22 @@
 # Type-safe builder 5
 
+Damit wir uns einer natürlicheren sprache annähern und die kein Wissen über die Semantik der Parameterreihenfolge von `grant("JANITOR" whenAccessing Floor::class)` voraussetzen, haben wir eine [infix](https://kotlinlang.org/docs/functions.html#infix-notation) "operator" `whenAccessing` eingeführt.
+
+Außerdem haben wir die `privilege`-Funktion umbenannt, um die Semantik in der Sprache deutlicher zu machen: es wird nicht länger nur ein `Privilege` erzeugt, sondern es wird ein `Privilege` *für* ein bestimmtes `Subject` erzeugt. Dass ein `Privilege` erzeugt wird ist außerdem implizit durch die Nutzung der DSL gegeben.
+
+```kotlin
+forSubject(User::class) {
+    // TODO noch immer viele Klammern, Auto-Vervollständigung in grant(|) wenig hilfreich, nutze stattdessen nur noch Infix-Operatoren
+    grant("JANITOR" whenAccessing Floor::class) {
+        Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+}
+```
+# Type-safe builder 5
+
 Da nur noch die condition innerhalb von grant {…} gesetzt wurde, geben wir diese direkt zurück.
 
 Der ursprüngliche Builder wird nun nicht mehr als receiver verwendet, stattdessen haben wir mit `GrantBuilderDsl` ein `object` eingeführt, dass wir nur verwenden, um die Sichtbarkeit innerhalb der DSL zu steuern.

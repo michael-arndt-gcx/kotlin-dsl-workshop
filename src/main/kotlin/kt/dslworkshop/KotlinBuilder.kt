@@ -14,10 +14,9 @@ import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
 
 fun kotlinBuilderStyle(): Privilege {
-    return privilege(User::class) {
-        // TODO mit 2 einfachen Parametern eher unverständlich, mit infix Operator natürlicher Sprache annähern
-        grant("JANITOR", Floor::class) {
-            // dieses liefert direkt die Condition
+    return forSubject(User::class) {
+        // TODO noch immer viele Klammern, Auto-Vervollständigung in grant(|) wenig hilfreich, nutze stattdessen nur noch Infix-Operatoren
+        grant("JANITOR" whenAccessing Floor::class) {
             Conjunction(
                 Equals(User::id, Floor::ownerId),
                 Equals(User::isAdmin, true)
@@ -28,6 +27,12 @@ fun kotlinBuilderStyle(): Privilege {
 
 class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
     private fun addGrant(grant: Grant) = privilegeBuilder.addGrant(grant)
+    fun grant(pair: Pair<String, KClass<Floor>>, block: GrantBuilderDsl.() -> Condition) {
+        val (permission, target) = pair
+        return grant(permission, target, block)
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
     fun grant(permission: String, target: KClass<Floor>? = null, block: GrantBuilderDsl.() -> Condition) {
         val condition = block(GrantBuilderDsl)
 
@@ -40,11 +45,13 @@ class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) 
         val grant = grantBuilder.build()
         addGrant(grant)
     }
+
+    infix fun String.whenAccessing(target: KClass<Floor>) = Pair(this, target)
 }
 
 object GrantBuilderDsl
 
-fun privilege(subject: KClass<User>, block: PrivilegeBuilderDslFacade.() -> Unit): Privilege {
+fun forSubject(subject: KClass<User>, block: PrivilegeBuilderDslFacade.() -> Unit): Privilege {
     val privilegeBuilder = PrivilegeBuilder().apply {
         this.subject = subject
     }
