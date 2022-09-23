@@ -1,3 +1,24 @@
+# Einfache Sprache mit Infix-Funktionen 3
+
+Um das beliebige aneinanderreihen von `whenAccessing`/`where` Klauseln zu unterbinden, haben wir erneut eine Facade für GrantBuilder eingeführt.
+
+Diese implementiert die drei Interfaces `GlobalGrantNode`, `GrantNodeWithTarget`, `GrantNodeWithCondition`. Dies ermöglicht es uns, dieselbe Instanz für alle Positionen im "Satz" zu verwenden, und dennoch die mögliche Weiterführung des Satzes über das Typsystem zu steuern.
+
+Allerdings funktioniert nun nur noch das vollständige Muster `grant permission "…" whenAccessing … where`, da wir `addGrant` nun in `where`. Dies war notwendig, da wir `addGrant` erst aufrufen können, wenn wir den Satz beenden. Tatsächlich wissen wir in der Sprache aber nicht, wann der Satz beendet ist.
+
+Als Folge ist die `Condition` nicht länger optional.
+
+```kotlin
+forSubject(User::class) {
+    grant permission "JANITOR" whenAccessing Floor::class where {
+        Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+}
+```
+
 # Einfache Sprache mit Infix-Funktionen 2
 
 Die Operator-Reihenfolge lässt sich in Kotlin nicht verändern. Wir umgehen dies, indem wir für alle Infix-Funktionen denselben Typ zurückgeben.

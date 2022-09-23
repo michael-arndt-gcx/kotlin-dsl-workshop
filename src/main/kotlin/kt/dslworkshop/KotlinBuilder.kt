@@ -15,7 +15,8 @@ import kotlin.reflect.KClass
 
 fun kotlinBuilderStyle(): Privilege {
     return forSubject(User::class) {
-        // TODO verhindere `grant permission "JANITOR" whenAccessing Floor::class whenAccessing Floor::class`
+        // TODO mache die Condition optional
+        grant permission "JANITOR" whenAccessing Floor::class
         grant permission "JANITOR" whenAccessing Floor::class where {
             Conjunction(
                 Equals(User::id, Floor::ownerId),
@@ -27,32 +28,42 @@ fun kotlinBuilderStyle(): Privilege {
 
 object GrantKeyword
 
-class GrantBuilderFacade(val grantBuilder: GrantBuilder) {
+sealed interface GlobalGrantNode
+sealed interface GrantNodeWithTarget
+sealed interface GrantNodeWithCondition
+class GrantBuilderFacade(val grantBuilder: GrantBuilder) : GlobalGrantNode,
+    GrantNodeWithTarget,
+    GrantNodeWithCondition {
     fun build(): Grant = grantBuilder.build()
 
     var condition: Condition?
         get() = grantBuilder.condition
-        set(value) {grantBuilder.condition = value}
+        set(value) {
+            grantBuilder.condition = value
+        }
     var target: KClass<Floor>?
         get() = grantBuilder.target
-        set(value) { grantBuilder.target = value}
-
+        set(value) {
+            grantBuilder.target = value
+        }
 }
+
 
 class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
     val grant = GrantKeyword
 
-    infix fun GrantKeyword.permission(permission: String): GrantBuilderFacade = GrantBuilderFacade(GrantBuilder().apply {
-        this.permission = permission
-    })
+    infix fun GrantKeyword.permission(permission: String): GlobalGrantNode =
+        GrantBuilderFacade(GrantBuilder().apply {
+            this.permission = permission
+        })
 
-    infix fun GrantBuilderFacade.whenAccessing(target: KClass<Floor>): GrantBuilderFacade {
-        this.target = target
+    infix fun GlobalGrantNode.whenAccessing(target: KClass<Floor>): GrantNodeWithTarget {
+        (this as GrantBuilderFacade).target = target
         return this
     }
 
-    infix fun GrantBuilderFacade.where(block: GrantBuilderDsl.() -> Conjunction) {
-        this.condition = block.invoke(GrantBuilderDsl)
+    infix fun GrantNodeWithTarget.where(block: GrantBuilderDsl.() -> Conjunction) {
+        (this as GrantBuilderFacade).condition = block.invoke(GrantBuilderDsl)
         addGrant(this.build())
     }
 

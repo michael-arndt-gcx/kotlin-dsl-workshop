@@ -23,6 +23,15 @@ fun javaBuilderStyle(): Privilege {
     val grant = grantBuilder.build()
     privilegeBuilder.addGrant(grant)
 
+    // TODO
+//    val globalGrantBuilder = GrantBuilder()
+//    globalGrantBuilder.permission = "JANITOR"
+//    globalGrantBuilder.target = Floor::class
+//    globalGrantBuilder.condition = null
+//
+//    val globalGrant = globalGrantBuilder.build()
+//    privilegeBuilder.addGrant(globalGrant)
+
     val privilege = privilegeBuilder.build()
 
     return privilege
