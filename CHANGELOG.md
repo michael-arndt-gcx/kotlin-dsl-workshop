@@ -1,3 +1,21 @@
+# Generics
+
+Für `forSubject` haben wir eine [inline Function mit reified Typparameter](https://kotlinlang.org/docs/inline-functions.html#reified-type-parameters) verwendet. Dieses erlaubt es die Klasse für `Subject` nicht als Literal (`Foo::class`), sondern als Typ-Parameter (`forSubject<Foo>`) anzugeben, und trotzdem auf die Klasse zugreifen zu können.
+
+Für `Target` haben wir davon abgesehen, damit wir den dreier-Rhythmus für die Infix-Funktionen beibehalten können.
+
+```kotlin
+forSubject<User> {
+    grant permission "JANITOR" whenAccessing Floor::class where {
+        Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+    grant permission "JANITOR" whenAccessing Floor::class
+}
+```
+
 # Einfache Sprache mit Infix-Funktionen 4
 
 Wir lösten uns von der `PrivilegeBuilderDslFacade` und haben an dessen Stelle `PrivilegeBuilderDsl` eingeführt. Wir delegieren nicht mehr direkt an `PrivilegeBuilder` sondern sammeln alle `GrantBuilderFacade` und konvertieren diese erst beim Abschluss der `forSubject`-Funktion.

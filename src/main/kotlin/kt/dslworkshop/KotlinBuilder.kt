@@ -14,9 +14,7 @@ import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
 
 fun kotlinBuilderStyle(): Privilege<*> {
-    // TODO mache Target generisch
     return forSubject<User> {
-        // TODO mache die Condition optional
         grant permission "JANITOR" whenAccessing Floor::class where {
             Conjunction(
                 Equals(User::id, Floor::ownerId),
@@ -29,20 +27,20 @@ fun kotlinBuilderStyle(): Privilege<*> {
 
 object GrantKeyword
 
-sealed interface GlobalGrantNode
-sealed interface GrantNodeWithTarget
+sealed interface GlobalGrantNode<T : Any>
+sealed interface GrantNodeWithTarget<T : Any>
 sealed interface GrantNodeWithCondition
-class GrantBuilderFacade(val grantBuilder: GrantBuilder) : GlobalGrantNode,
-    GrantNodeWithTarget,
+class GrantBuilderFacade<T : Any>(val grantBuilder: GrantBuilder<T>) : GlobalGrantNode<T>,
+    GrantNodeWithTarget<T>,
     GrantNodeWithCondition {
-    fun build(): Grant = grantBuilder.build()
+    fun build(): Grant<*> = grantBuilder.build()
 
     var condition: Condition?
         get() = grantBuilder.condition
         set(value) {
             grantBuilder.condition = value
         }
-    var target: KClass<Floor>?
+    var target: KClass<T>?
         get() = grantBuilder.target
         set(value) {
             grantBuilder.target = value
@@ -52,20 +50,21 @@ class GrantBuilderFacade(val grantBuilder: GrantBuilder) : GlobalGrantNode,
 
 class PrivilegeBuilderDsl {
     val grant = GrantKeyword
-    val grantBuilderFacades: MutableList<GrantBuilderFacade> = mutableListOf()
+    val grantBuilderFacades: MutableList<GrantBuilderFacade<*>> = mutableListOf()
 
-    infix fun GrantKeyword.permission(permission: String): GlobalGrantNode =
-        GrantBuilderFacade(GrantBuilder().apply {
+    infix fun GrantKeyword.permission(permission: String): GlobalGrantNode<Nothing> =
+        GrantBuilderFacade(GrantBuilder<Nothing>().apply {
             this.permission = permission
         }).also(grantBuilderFacades::add)
 
-    infix fun GlobalGrantNode.whenAccessing(target: KClass<Floor>): GrantNodeWithTarget {
-        (this as GrantBuilderFacade).target = target
+    infix fun <T : Any> GlobalGrantNode<Nothing>.whenAccessing(target: KClass<T>): GrantNodeWithTarget<T> {
+        @Suppress("UNCHECKED_CAST")
+        (this as GrantBuilderFacade<T>).target = target
         return this
     }
 
-    infix fun GrantNodeWithTarget.where(block: GrantBuilderDsl.() -> Conjunction) {
-        (this as GrantBuilderFacade).condition = block.invoke(GrantBuilderDsl)
+    infix fun <T : Any> GrantNodeWithTarget<T>.where(block: GrantBuilderDsl.() -> Conjunction) {
+        (this as GrantBuilderFacade<T>).condition = block.invoke(GrantBuilderDsl)
     }
 }
 
