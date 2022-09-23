@@ -1,3 +1,21 @@
+# Einfache Sprache mit Infix-Funktionen
+
+Wir haben begonnen eine einfache Sprache mittels Infix-Funktionen zu bauen. Infix-Funktionen erlauben das Auslassen von Symbolen wie `.` und `()` und sind damit näher an natürlicher Sprache.
+
+Infix-Funktionen haben jedoch nicht zwangsläufig die gewünschte Operator-Reihenfolge. In dieser Variante benötigt die DSL daher `()`, um die Reihenfolge explizit zu korrigieren.
+
+```kotlin
+forSubject(User::class) {
+    // TODO entferne alle Klammern
+    (grant permission ("JANITOR" whenAccessing Floor::class)) where {
+        Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+}
+```
+
 # Type-safe builder 5
 
 Damit wir uns einer natürlicheren sprache annähern und die kein Wissen über die Semantik der Parameterreihenfolge von `grant("JANITOR" whenAccessing Floor::class)` voraussetzen, haben wir eine [infix](https://kotlinlang.org/docs/functions.html#infix-notation) "operator" `whenAccessing` eingeführt.

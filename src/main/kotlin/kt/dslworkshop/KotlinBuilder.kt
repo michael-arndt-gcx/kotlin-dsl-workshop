@@ -15,8 +15,8 @@ import kotlin.reflect.KClass
 
 fun kotlinBuilderStyle(): Privilege {
     return forSubject(User::class) {
-        // TODO noch immer viele Klammern, Auto-Vervollständigung in grant(|) wenig hilfreich, nutze stattdessen nur noch Infix-Operatoren
-        grant("JANITOR" whenAccessing Floor::class) {
+        // TODO entferne alle Klammern
+        (grant permission ("JANITOR" whenAccessing Floor::class)) where {
             Conjunction(
                 Equals(User::id, Floor::ownerId),
                 Equals(User::isAdmin, true)
@@ -25,7 +25,22 @@ fun kotlinBuilderStyle(): Privilege {
     }
 }
 
+object GrantKeyword
 class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
+    val grant = GrantKeyword
+
+    infix fun GrantKeyword.permission(pair: Pair<String, KClass<Floor>>) : GrantBuilder = GrantBuilder().apply {
+        this.permission = pair.first
+        this.target = pair.second
+    }
+
+    infix fun GrantBuilder.where(block: GrantBuilderDsl.() -> Conjunction) {
+        this.condition = block.invoke(GrantBuilderDsl)
+        addGrant(this.build())
+    }
+
+    //.also { privilegeBuilder.addGrant(it) }
+
     private fun addGrant(grant: Grant) = privilegeBuilder.addGrant(grant)
     fun grant(pair: Pair<String, KClass<Floor>>, block: GrantBuilderDsl.() -> Condition) {
         val (permission, target) = pair
