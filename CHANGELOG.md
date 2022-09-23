@@ -1,3 +1,13 @@
+# JPA Criteria API 1
+
+Wir haben unsere `Condition` in ein `Predicate` aus der JPA Criteria API umgebaut.
+
+Zunächst haben wir uns auf die Übersetzung von genau einem Muster konzentriert:
+
+```kotlin
+Foo::bar == "literal"
+```
+
 # Generics
 
 Für `forSubject` haben wir eine [inline Function mit reified Typparameter](https://kotlinlang.org/docs/inline-functions.html#reified-type-parameters) verwendet. Dieses erlaubt es die Klasse für `Subject` nicht als Literal (`Foo::class`), sondern als Typ-Parameter (`forSubject<Foo>`) anzugeben, und trotzdem auf die Klasse zugreifen zu können.
