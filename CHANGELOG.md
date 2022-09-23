@@ -1,3 +1,20 @@
+# Type-safe builder 5
+
+Da nur noch die condition innerhalb von grant {…} gesetzt wurde, geben wir diese direkt zurück.
+
+Der ursprüngliche Builder wird nun nicht mehr als receiver verwendet, stattdessen haben wir mit `GrantBuilderDsl` ein `object` eingeführt, dass wir nur verwenden, um die Sichtbarkeit innerhalb der DSL zu steuern.
+
+```kotlin
+privilege(User::class) {
+    grant("JANITOR", Floor::class) {
+        Conjunction(
+            Equals(User::id, Floor::ownerId),
+            Equals(User::isAdmin, true)
+        )
+    }
+}
+```
+
 # Type-safe builder 4
 
 Wir haben auch für den `GrantBuilder` eine Facade eingeführt.
