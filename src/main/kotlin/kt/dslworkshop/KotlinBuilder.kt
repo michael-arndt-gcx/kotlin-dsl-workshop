@@ -27,23 +27,35 @@ fun kotlinBuilderStyle(): Privilege {
 
 object GrantKeyword
 
+class GrantBuilderFacade(val grantBuilder: GrantBuilder) {
+    fun build(): Grant = grantBuilder.build()
+
+    var condition: Condition?
+        get() = grantBuilder.condition
+        set(value) {grantBuilder.condition = value}
+    var target: KClass<Floor>?
+        get() = grantBuilder.target
+        set(value) { grantBuilder.target = value}
+
+}
+
 class PrivilegeBuilderDslFacade(private val privilegeBuilder: PrivilegeBuilder) {
     val grant = GrantKeyword
 
-    infix fun GrantKeyword.permission(permission: String): GrantBuilder = GrantBuilder().apply {
+    infix fun GrantKeyword.permission(permission: String): GrantBuilderFacade = GrantBuilderFacade(GrantBuilder().apply {
         this.permission = permission
-    }
+    })
 
-    infix fun GrantBuilder.whenAccessing(target: KClass<Floor>): GrantBuilder {
+    infix fun GrantBuilderFacade.whenAccessing(target: KClass<Floor>): GrantBuilderFacade {
         this.target = target
         return this
     }
 
-    infix fun GrantBuilder.where(block: GrantBuilderDsl.() -> Conjunction) {
+    infix fun GrantBuilderFacade.where(block: GrantBuilderDsl.() -> Conjunction) {
         this.condition = block.invoke(GrantBuilderDsl)
         addGrant(this.build())
     }
-    
+
     private fun addGrant(grant: Grant) = privilegeBuilder.addGrant(grant)
 }
 
