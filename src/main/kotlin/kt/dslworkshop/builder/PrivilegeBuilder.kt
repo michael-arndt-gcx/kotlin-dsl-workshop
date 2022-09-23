@@ -5,13 +5,13 @@ import kt.dslworkshop.authorization.Privilege
 import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
 
-class PrivilegeBuilder {
-    lateinit var subject: KClass<User>
+class PrivilegeBuilder<T : Any> {
+    lateinit var subject: KClass<T>
     private val grants: MutableList<Grant> = mutableListOf()
 
     fun addGrant(grant: Grant) {
         this.grants.add(grant)
     }
 
-    fun build(): Privilege = Privilege(subject, grants.toList())
+    fun build(): Privilege<T> = Privilege(subject, grants.toList())
 }
