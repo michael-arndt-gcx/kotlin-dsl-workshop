@@ -78,10 +78,15 @@ object ConditionBuilderDsl {
     infix fun Condition.and(right: Any) = IncompleteConjunction(this, right)
     infix fun IncompleteConjunction.eq(other: Any): Condition =
         left and (this.right eq other)
+    infix fun IncompleteConjunctionWithProperty.eq(other: KProperty1<*, *>): Condition =
+        left and (this.right eq other)
+    infix fun IncompleteConjunctionWithValue.eq(other: KProperty1<*, *>): Condition =
+        left and (this.right eq other)
 }
 
-// Beachte: IncompleteConjunctionWithInstanceNode ist keine Condition!
-data class IncompleteConjunction(val left: Condition, val right: Any)
+// Beachte: IncompleteConjunctionWith* ist keine Condition!
+data class IncompleteConjunctionWithProperty(val left: Condition, val right: KProperty1<*, *>)
+data class IncompleteConjunctionWithValue(val left: Condition, val right: Any?)
 
 inline fun <reified T : Any> forSubject(block: PrivilegeBuilderDsl.() -> Unit): Privilege<T> {
     val privilegeBuilder = PrivilegeBuilder<T>().apply {
