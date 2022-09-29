@@ -12,7 +12,6 @@ import kt.dslworkshop.builder.PrivilegeBuilder
 import kt.dslworkshop.domain.Floor
 import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 
 fun kotlinBuilderStyle(): Privilege<*> {
     return forSubject<User> {
@@ -22,9 +21,9 @@ fun kotlinBuilderStyle(): Privilege<*> {
             //  wir gehen dafür folgende Schritte
             //  1. (User::id == Floor::ownerId) and (User::isAdmin == true)
             //  2. User::id == Floor::ownerId and User::isAdmin == true
-            //  ignoriere vorerst Typ-Sicherheit
+            //  3. stelle Typ-Sicherheit her
             //  aber beachte die Sichtbarkeit
-            (User::id eq Floor::ownerId) and (User::isAdmin eq true)
+            User::id eq Floor::ownerId and User::isAdmin eq true
         }
         grant permission "JANITOR" whenAccessing Floor::class
     }
@@ -76,7 +75,13 @@ class PrivilegeBuilderDsl {
 object ConditionBuilderDsl {
     infix fun Condition.and(other: Condition) = Conjunction(this, other)
     infix fun Any.eq(other: Any): Equals = Equals(this, other)
+    infix fun Condition.and(right: Any) = IncompleteConjunction(this, right)
+    infix fun IncompleteConjunction.eq(other: Any): Condition =
+        left and (this.right eq other)
 }
+
+// Beachte: IncompleteConjunctionWithInstanceNode ist keine Condition!
+data class IncompleteConjunction(val left: Condition, val right: Any)
 
 inline fun <reified T : Any> forSubject(block: PrivilegeBuilderDsl.() -> Unit): Privilege<T> {
     val privilegeBuilder = PrivilegeBuilder<T>().apply {

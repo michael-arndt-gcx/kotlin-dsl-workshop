@@ -1,3 +1,13 @@
+# Condition DSL 2
+
+Die Operator-Reihenfolge wurde wieder durch das Typ-System sichergestellt. Wir verwenden "unvollständige" Typen. Diese entsprechen zum einen nicht dem erwarteten Rückgabetyp, und zum anderen werden Extension-Functions bereitgestellt, um aus diesem unvollständigen Typ wieder den korrekten zu bauen, dessen Semantik erwartungskonform ist.
+
+```kotlin
+infix fun Condition.and(right: Any) = IncompleteConjunction(this, right)
+data class IncompleteConjunction(val left: Condition, val right: Any)
+
+```
+
 # Condition DSL
 
 Wir gingen einen ersten Schritt hin zu einer Condition DSL, die sich ähnlich schreibt wie Boolesche Ausdrücke in vielen üblichen Sprachen, u. A. kotlin.
