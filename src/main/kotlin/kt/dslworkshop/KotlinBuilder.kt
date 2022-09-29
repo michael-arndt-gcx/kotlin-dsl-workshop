@@ -12,6 +12,7 @@ import kt.dslworkshop.builder.PrivilegeBuilder
 import kt.dslworkshop.domain.Floor
 import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
 
 fun kotlinBuilderStyle(): Privilege<*> {
     return forSubject<User> {
@@ -20,12 +21,10 @@ fun kotlinBuilderStyle(): Privilege<*> {
             //  User::id == Floor::ownerId && User::isAdmin == true
             //  wir gehen dafür folgende Schritte
             //  1. (User::id == Floor::ownerId) and (User::isAdmin == true)
+            //  2. User::id == Floor::ownerId and User::isAdmin == true
             //  ignoriere vorerst Typ-Sicherheit
             //  aber beachte die Sichtbarkeit
-            Conjunction(
-                Equals(User::id, Floor::ownerId),
-                Equals(User::isAdmin, true)
-            )
+            (User::id eq Floor::ownerId) and (User::isAdmin eq true)
         }
         grant permission "JANITOR" whenAccessing Floor::class
     }
@@ -69,12 +68,15 @@ class PrivilegeBuilderDsl {
         return this
     }
 
-    infix fun <T : Any> GrantNodeWithTarget<T>.where(block: GrantBuilderDsl.() -> Conjunction) {
-        (this as GrantBuilderFacade<T>).condition = block.invoke(GrantBuilderDsl)
+    infix fun <T : Any> GrantNodeWithTarget<T>.where(block: ConditionBuilderDsl.() -> Condition) {
+        (this as GrantBuilderFacade<T>).condition = block.invoke(ConditionBuilderDsl)
     }
 }
 
-object GrantBuilderDsl
+object ConditionBuilderDsl {
+    infix fun Condition.and(other: Condition) = Conjunction(this, other)
+    infix fun Any.eq(other: Any): Equals = Equals(this, other)
+}
 
 inline fun <reified T : Any> forSubject(block: PrivilegeBuilderDsl.() -> Unit): Privilege<T> {
     val privilegeBuilder = PrivilegeBuilder<T>().apply {

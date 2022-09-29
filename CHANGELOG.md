@@ -1,3 +1,27 @@
+# Condition DSL
+
+Wir gingen einen ersten Schritt hin zu einer Condition DSL, die sich ähnlich schreibt wie Boolesche Ausdrücke in vielen üblichen Sprachen, u. A. kotlin.
+
+Wie zuvor verwenden wir infix-Funktionen als Operatoren und begannen mit einer expliziten Klammerung um die Operator-Reihenfolge zu umgehen.
+
+```kotlin
+forSubject<User> {
+    grant permission "JANITOR" whenAccessing Floor::class where {
+        (User::id eq Floor::ownerId) and (User::isAdmin eq true)
+    }
+}
+```
+
+```mermaid
+graph BT;
+    eq1[eq] --> and;
+    eq2[eq] --> and;
+    id1[User::id] --> eq1;
+    id2[Floor::ownerId] --> eq1;
+    id3[User::isAdmin] --> eq2;
+    true --> eq2;
+
+```
 # JPA Criteria API 2
 
 Wir können nun alle Kombinationen aus Gleichheits-Vergleichen mit unterschiedlichen Typen in ein `Predicate` überführen.
