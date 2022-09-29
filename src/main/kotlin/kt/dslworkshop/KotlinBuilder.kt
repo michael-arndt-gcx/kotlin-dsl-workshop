@@ -50,7 +50,10 @@ class GrantBuilderFacade<T : Any>(val grantBuilder: GrantBuilder<T>) : GlobalGra
         }
 }
 
+@DslMarker
+annotation class PermissionDsl
 
+@PermissionDsl
 class PrivilegeBuilderDsl {
     val grant = GrantKeyword
     val grantBuilderFacades: MutableList<GrantBuilderFacade<*>> = mutableListOf()
@@ -58,7 +61,7 @@ class PrivilegeBuilderDsl {
     infix fun GrantKeyword.permission(permission: String): GlobalGrantNode<Nothing> =
         GrantBuilderFacade(GrantBuilder<Nothing>().apply {
             this.permission = permission
-        }).also(grantBuilderFacades::add)
+        }).also(this@PrivilegeBuilderDsl.grantBuilderFacades::add)
 
     infix fun <T : Any> GlobalGrantNode<Nothing>.whenAccessing(target: KClass<T>): GrantNodeWithTarget<T> {
         @Suppress("UNCHECKED_CAST")
@@ -67,11 +70,12 @@ class PrivilegeBuilderDsl {
     }
 
     infix fun <T : Any> GrantNodeWithTarget<T>.where(block: ConditionBuilderDsl.() -> Condition) {
-        (this as GrantBuilderFacade<T>).condition = block.invoke(ConditionBuilderDsl)
+        (this as GrantBuilderFacade<T>).condition = block.invoke(ConditionBuilderDsl())
     }
 }
 
-object ConditionBuilderDsl {
+@PermissionDsl
+class ConditionBuilderDsl {
     // TODO der code is sehr unübersichtlich geworden. Vereinfache durch Abstraktionsschicht
     infix fun Condition.and(other: Condition) = Conjunction(this, other)
     infix fun <V> KProperty1<*, V>.eq(other: V): Equals = Equals(this, other)

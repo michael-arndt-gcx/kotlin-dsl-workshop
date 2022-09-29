@@ -87,6 +87,6 @@ class ConditionBuilderDslTest {
     }
 
     private fun condition(block: ConditionBuilderDsl.() -> Condition): Condition {
-        return block.invoke(ConditionBuilderDsl)
+        return block.invoke(ConditionBuilderDsl())
     }
 }

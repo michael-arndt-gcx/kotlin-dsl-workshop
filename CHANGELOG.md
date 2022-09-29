@@ -1,3 +1,37 @@
+# DslMarker
+
+Da `grant` überall verfügbar ist, wo es einen Receiver vom Typ `PrivilegeBuilderDslFacade` vorhanden ist,
+kann auf `grant` auch innerhalb von `grant` zugegriffen werden. Das lässt sich nicht grundsätzlich unterbinden, aber für den impliziten Fall:
+
+```kotlin
+forSubject<User> {
+    grant permission "JANITOR" whenAccessing Floor::class where {
+        grant permission "USER"
+    }
+}
+```
+
+bietet kotlin die `DslMarker` Annotation. Mit dieser können neue Annotations annotiert werden, die Elemente unserer DSL repräsentieren, die nicht verschachtelt werden sollen.
+
+```kotlin
+@DslMarker
+annotation class PermissionDsl
+
+@PermissionDsl
+class PrivilegeBuilderDsl
+
+@PermissionDsl
+class ConditionBuilderDsl
+```
+
+Der zugriff auf `grant` aus einem `where`-block ist nun nur noch mit explizitem receiver möglich:
+
+```kotlin
+this@forSubject.grant
+```
+
+und eine versehentliche Verschachtelung somit sehr unwahrscheinlich.
+
 # Condition DSL mit Typsicherheit und Generics
 
 Wir haben generics in die Condition DSL eingebaut. Da wir die möglichen Kombinationen beschränken wollten auf:
