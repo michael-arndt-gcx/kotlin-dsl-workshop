@@ -12,17 +12,16 @@ import kt.dslworkshop.builder.PrivilegeBuilder
 import kt.dslworkshop.domain.Floor
 import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 fun kotlinBuilderStyle(): Privilege<*> {
     return forSubject<User> {
         grant permission "JANITOR" whenAccessing Floor::class where {
-            // TODO: DSL erstellen; Ziel: möglichst nah an
-            //  User::id == Floor::ownerId && User::isAdmin == true
-            //  wir gehen dafür folgende Schritte
-            //  1. (User::id == Floor::ownerId) and (User::isAdmin == true)
-            //  2. User::id == Floor::ownerId and User::isAdmin == true
-            //  3. stelle Typ-Sicherheit her
-            //  aber beachte die Sichtbarkeit
+            //TODO: hier kann
+            // grant permission "USER"
+            // aufgerufen werden
+
+            // TODO: ConditionBuilderDsl ist ein object, eq kann deshalb statisch importiert werden
             User::id eq Floor::ownerId and User::isAdmin eq true
         }
         grant permission "JANITOR" whenAccessing Floor::class
@@ -73,20 +72,24 @@ class PrivilegeBuilderDsl {
 }
 
 object ConditionBuilderDsl {
+    // TODO der code is sehr unübersichtlich geworden. Vereinfache durch Abstraktionsschicht
     infix fun Condition.and(other: Condition) = Conjunction(this, other)
-    infix fun Any.eq(other: Any): Equals = Equals(this, other)
-    infix fun Condition.and(right: Any) = IncompleteConjunction(this, right)
-    infix fun IncompleteConjunction.eq(other: Any): Condition =
+    infix fun <V> KProperty1<*, V>.eq(other: V): Equals = Equals(this, other)
+    infix fun <V> KProperty1<*, V>.eq(other: KProperty1<*, V>): Equals = Equals(this, other)
+    infix fun <V> Condition.and(right: KProperty1<*, V>) = IncompleteConjunctionWithProperty(this, right)
+    infix fun <V> Condition.and(right: V) = IncompleteConjunctionWithValue(this, right)
+    infix fun <V> IncompleteConjunctionWithProperty<V>.eq(other: V): Condition =
         left and (this.right eq other)
-    infix fun IncompleteConjunctionWithProperty.eq(other: KProperty1<*, *>): Condition =
+    infix fun <V> IncompleteConjunctionWithProperty<V>.eq(other: KProperty1<*, V>): Condition =
         left and (this.right eq other)
-    infix fun IncompleteConjunctionWithValue.eq(other: KProperty1<*, *>): Condition =
+    infix fun <V> IncompleteConjunctionWithValue<V>.eq(other: KProperty1<*, V>): Condition =
         left and (this.right eq other)
+    infix fun <V> V.eq(other: KProperty1<*, V>): Equals = Equals(this, other)
 }
 
-// Beachte: IncompleteConjunctionWith* ist keine Condition!
-data class IncompleteConjunctionWithProperty(val left: Condition, val right: KProperty1<*, *>)
-data class IncompleteConjunctionWithValue(val left: Condition, val right: Any?)
+// Beachte: IncompleteConjunctionWithInstanceNode ist keine Condition!
+data class IncompleteConjunctionWithProperty<V>(val left: Condition, val right: KProperty1<*, V>)
+data class IncompleteConjunctionWithValue<V>(val left: Condition, val right: V)
 
 inline fun <reified T : Any> forSubject(block: PrivilegeBuilderDsl.() -> Unit): Privilege<T> {
     val privilegeBuilder = PrivilegeBuilder<T>().apply {

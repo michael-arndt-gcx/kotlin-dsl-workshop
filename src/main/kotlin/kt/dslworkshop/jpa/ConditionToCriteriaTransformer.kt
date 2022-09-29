@@ -32,8 +32,9 @@ class ConditionToCriteriaTransformer(val entityManager: EntityManager) {
     }
 
 
-    private fun Any.toPredicate(cb: CriteriaBuilder, criteriaQuery: CriteriaQuery<*>): Expression<*> {
+    private fun Any?.toPredicate(cb: CriteriaBuilder, criteriaQuery: CriteriaQuery<*>): Expression<*> {
         return when(this) {
+            null -> cb.nullLiteral(Any::class.java)
             is Int, is String -> cb.literal(this)
             is KProperty<*> -> {
                 val entityClass = ((this as CallableReference).owner as KClass<*>).java

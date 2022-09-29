@@ -1,3 +1,19 @@
+# Condition DSL mit Typsicherheit und Generics
+
+Wir haben generics in die Condition DSL eingebaut. Da wir die möglichen Kombinationen beschränken wollten auf:
+
+```kotlin
+Foo::bar == 1
+1 == Foo::bar
+Foo::bar == Buz::qux
+```
+
+mussten wir mehrere Überladungen für den `eq`-Operator anlegen.
+
+Auch bei dem unvollständigen Typen mussten wir zwischen "Value" und "Property" Typen unterscheiden
+
+Merke: Der Unterbau ist nicht Typsicher! Wir haben also einen Typsicheren "Überbau" für Legacy-Code geschrieben.
+
 # Condition DSL 2
 
 Die Operator-Reihenfolge wurde wieder durch das Typ-System sichergestellt. Wir verwenden "unvollständige" Typen. Diese entsprechen zum einen nicht dem erwarteten Rückgabetyp, und zum anderen werden Extension-Functions bereitgestellt, um aus diesem unvollständigen Typ wieder den korrekten zu bauen, dessen Semantik erwartungskonform ist.
