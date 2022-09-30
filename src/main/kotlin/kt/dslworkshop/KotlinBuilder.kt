@@ -12,6 +12,8 @@ import kt.dslworkshop.builder.PrivilegeBuilder
 import kt.dslworkshop.domain.Floor
 import kt.dslworkshop.domain.User
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 fun kotlinBuilderStyle(): Privilege<*> {
     return forSubject<User> {
@@ -19,12 +21,14 @@ fun kotlinBuilderStyle(): Privilege<*> {
             // TODO: DSL erstellen; Ziel: möglichst nah an
             //  User::id == Floor::ownerId && User::isAdmin == true
             //  wir gehen dafür folgende Schritte
-            //  1. (User::id == Floor::ownerId) and (User::isAdmin == true)
+            //  1. (User::id eq Floor::ownerId) and (User::isAdmin eq true)
             //  ignoriere vorerst Typ-Sicherheit
             //  aber beachte die Sichtbarkeit
+            val condition1: Condition = (User::id eq Floor::ownerId)
+            val condition2: Condition = (User::isAdmin eq true)
             Conjunction(
-                Equals(User::id, Floor::ownerId),
-                Equals(User::isAdmin, true)
+                condition1,
+                condition2
             )
         }
         grant permission "JANITOR" whenAccessing Floor::class
@@ -74,7 +78,10 @@ class PrivilegeBuilderDsl {
     }
 }
 
-object GrantBuilderDsl
+object GrantBuilderDsl {
+    infix fun <V> KProperty<V>.eq(other: KProperty1<Floor, V>): Condition = Equals(this, other)
+    infix fun <V> KProperty<V>.eq(other: Any): Condition = Equals(this, other)
+}
 
 inline fun <reified T : Any> forSubject(block: PrivilegeBuilderDsl.() -> Unit): Privilege<T> {
     val privilegeBuilder = PrivilegeBuilder<T>().apply {
