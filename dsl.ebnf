@@ -1,0 +1,23 @@
+(* https://matthijsgroen.github.io/ebnf2railroad/index.html *)
+(* => whenAccessing/condition: eigener Typ *)
+grant = permissionInfix, [ "whenAccessing", target ], [conditionDeclaration];
+
+permissionInfix = "grant", "permission", permission;
+
+conditionDeclaration = "where", "{", condition, "}";
+
+condition = conjunction | eq | lt | lte;
+
+conjunction = condition, "and", condition;
+
+eq = expression, "eq", expression;
+lt = expression, "<", expression;
+lte = expression, "<=", expression;
+
+expression = value | reference;
+
+value = "int";
+reference = "class::field";
+
+target = "target::class";
+permission = "permission" ;
