@@ -24,7 +24,7 @@ fun kotlinBuilderStyle(): Privilege<*> {
             //  2. User::id == Floor::ownerId and User::isAdmin == true
             //  ignoriere vorerst Typ-Sicherheit
             //  aber beachte die Sichtbarkeit
-            (User::id eq Floor::ownerId) and (User::isAdmin eq true)
+            User::id eq Floor::ownerId and User::isAdmin eq true
         }
         grant permission "JANITOR" whenAccessing Floor::class
     }
@@ -75,6 +75,12 @@ class PrivilegeBuilderDsl {
 
 object ConditionBuilderDsl {
     infix fun Condition.and(other: Condition) = Conjunction(this, other)
+    infix fun Condition.and(other: KProperty<*>) = IncompleteConjunction(this, other)
+
+    data class IncompleteConjunction(val left: Condition, val halfRight: KProperty<*>)
+
+    infix fun IncompleteConjunction.eq(other: KProperty<*>): Conjunction = Conjunction(this.left, this.halfRight eq
+            other)
     infix fun Any.eq(other: Any): Equals = Equals(this, other)
 }
 
