@@ -151,7 +151,10 @@ class ConditionToCriteriaTransformerTest {
         val device3 = deviceRepository.save(Device(name = "device3", owner = userA, securityLevel = 2, deviceType = "conventional"))
         val device4 = deviceRepository.save(Device(name = "device4", owner = userB, securityLevel = 1, deviceType = "conventional"))
 
-        val condition = Conjunction(Equals(1, Device::securityLevel), Equals(Device::deviceType, "conventional"))
+        val condition = Conjunction(
+            Equals(1, Device::securityLevel),
+            Equals(Device::deviceType, "conventional")
+        )
 
         assertThat {
             userRepository.findDevices(userA, condition)
